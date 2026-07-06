@@ -1,4 +1,4 @@
-const CACHE_NAME = "ce-trainer-v0.4.1";
+const CACHE_NAME = "ce-simultor-v0.4.1";
 
 const CORE_ASSETS = [
   "./",
