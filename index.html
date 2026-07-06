@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Grundfahraufgaben CE</title>
 
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#1d1d1d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CE Trainer">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+
 <style>
 /* =========================================================
    00 GRUNDLAYOUT
@@ -92,6 +103,48 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
+}
+
+.vehicleSelection {
+  text-align: left;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+}
+
+.vehicleSelection label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.vehicleSelection select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  color: white;
+  background: rgba(20, 26, 32, 0.92);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.vehicleSelection option {
+  color: #111;
+}
+
+.vehicleSelectionInfo {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .menuButton,
@@ -587,6 +640,10 @@ h1 {
     gap: 10px;
   }
 
+  .vehicleSelection {
+    padding: 12px;
+  }
+
   .menuButton {
     font-size: 22px;
     line-height: 1.2;
@@ -661,20 +718,29 @@ h1 {
         </button>
         <button class="infoButton" id="fehlerUmkehrenBtn">Fehlerbewertung</button>
       </div>
-<div class="menuRow">
-<button class="infoButton highscoreMini" id="showHighscoreGeradeBtn">
-  🏆 Rampe
-</button>
 
-<button class="infoButton highscoreMini" id="showHighscoreUmkehrenBtn">
-  🏆 Umkehren
-</button>
+      <div class="vehicleSelection">
+        <label for="trailerSelect">Anhänger</label>
+        <select id="trailerSelect"></select>
+        <div class="vehicleSelectionInfo" id="trailerSelectInfo"></div>
+      </div>
 
-<button class="infoButton highscoreMini" id="openBugReportBtn">
-  🐞 Fehler melden
-</button>
+      <div class="menuRow">
+        <button class="infoButton highscoreMini" id="showHighscoreGeradeBtn">
+          🏆 Rampe
+        </button>
 
-    <div class="credits">Entwickelt von KfAusbZ Oldenburg<br>© HptFw Lang</div>
+        <button class="infoButton highscoreMini" id="showHighscoreUmkehrenBtn">
+          🏆 Umkehren
+        </button>
+
+        <button class="infoButton highscoreMini" id="openBugReportBtn">
+          🐞 Fehler melden
+        </button>
+      </div>
+
+      <div class="credits">Entwickelt von KfAusbZ Oldenburg<br>© HptFw Lang</div>
+    </div>
   </div>
 </main>
 
@@ -820,7 +886,11 @@ h1 {
    01 GLOBALE EINSTELLUNGEN
    Diese Werte gelten für beide Aufgaben.
    ========================================================= */
-const GAME_VERSION = "0.4.0";
+const GAME_VERSION = "0.4.1";
+const CHANGELOG = [
+  "0.4.1: PWA-Unterstützung ergänzt (Manifest, App-Icon, Service Worker Registrierung).",
+  "0.4.0: Highscore, Bugreport und Frontansicht integriert."
+];
 const HIGHSCORE_URL = "https://script.google.com/macros/s/AKfycbwKMoKVpwwGgBsF-qp8j9BAUavTWIWp4j1tqCaU_WFnCQkHMqRu32WnPEuLVHVNd7y1rQ/exec";
 const BUGREPORT_URL = "https://script.google.com/macros/s/AKfycbwKMoKVpwwGgBsF-qp8j9BAUavTWIWp4j1tqCaU_WFnCQkHMqRu32WnPEuLVHVNd7y1rQ/exec";
 const GLOBAL = {
@@ -858,6 +928,53 @@ const GLOBAL = {
   minZoom: 0.20,
   maxZoom: 2.50
 };
+
+const TRAILER_PROFILES = [
+  {
+    id: "drehschemel_standard_plane",
+    name: "Drehschemelanhänger Standard",
+    description: "Ausgewogenes Übungsfahrzeug mit mittlerer Deichsel und Achsgeometrie.",
+    topViewSprite: "anhaenger_drehschemel_plane_top.png",
+    length: 260,
+    width: 90,
+    frontAxleInset: 30,
+    rearAxleX: -75,
+    drawbarLength: 100
+  },
+  {
+    id: "drehschemel_kurz_plane",
+    name: "Drehschemelanhänger Kurz",
+    description: "Kürzerer Radstand, kürzere Deichsel, reagiert beim Rückwärtsfahren direkter.",
+    topViewSprite: "anhaenger_drehschemel_plane_top.png",
+    length: 235,
+    width: 90,
+    frontAxleInset: 26,
+    rearAxleX: -58,
+    drawbarLength: 86
+  },
+  {
+    id: "drehschemel_lang_plane",
+    name: "Drehschemelanhänger Lang",
+    description: "Längerer Radstand und längere Deichsel, läuft ruhiger und träger nach.",
+    topViewSprite: "anhaenger_drehschemel_plane_top.png",
+    length: 300,
+    width: 92,
+    frontAxleInset: 38,
+    rearAxleX: -102,
+    drawbarLength: 118
+  }
+];
+
+const DEFAULT_TRAILER_TOP_VIEW_SPRITE = TRAILER_PROFILES[0].topViewSprite;
+let selectedTrailerProfileId = TRAILER_PROFILES[0].id;
+
+function getSelectedTrailerProfile() {
+  return TRAILER_PROFILES.find(profile => profile.id === selectedTrailerProfileId) || TRAILER_PROFILES[0];
+}
+
+function getTrailerFrontAxleOffset() {
+  return trailer.length / 2 - trailer.frontAxleInset;
+}
 
 /* =========================================================
    02 AUFGABE 20m GERADE RÜCKWÄRTS
@@ -1038,6 +1155,8 @@ const speedDisplay = document.getElementById("speedDisplay");
 const followBtn = document.getElementById("followBtn");
 const guideBtn = document.getElementById("guideBtn");
 const mirrorToggleBtn = document.getElementById("mirrorToggleBtn");
+const trailerSelect = document.getElementById("trailerSelect");
+const trailerSelectInfo = document.getElementById("trailerSelectInfo");
 
 const highscorePanel = document.getElementById("highscorePanel");
 const highscoreTitle = document.getElementById("highscoreTitle");
@@ -1261,8 +1380,21 @@ trailerImageRaw.onload = function () {
   trailerSpriteLoaded = true;
 };
 
+trailerImageRaw.onerror = function () {
+  const profile = getSelectedTrailerProfile();
+  if (profile.topViewSprite !== DEFAULT_TRAILER_TOP_VIEW_SPRITE) {
+    trailerImageRaw.src = DEFAULT_TRAILER_TOP_VIEW_SPRITE;
+  }
+};
+
 truckImageRaw.src = "fahrzeug_sprite_1.png";
-trailerImageRaw.src = "fahrzeug_sprite_2.png?v=2";
+loadTrailerTopViewSprite();
+
+function loadTrailerTopViewSprite() {
+  const profile = getSelectedTrailerProfile();
+  trailerSpriteLoaded = false;
+  trailerImageRaw.src = profile.topViewSprite;
+}
 
 // Sprites für die orthographische Frontansicht.
 // Wenn eine Datei nicht vorhanden ist, zeichnet das Spiel automatisch die bisherige Box-Grafik.
@@ -1339,6 +1471,37 @@ function loadMapImage(task) {
 /* =========================================================
    07 MENÜ UND AUFGABENSTART
    ========================================================= */
+
+function initTrailerSelection() {
+  trailerSelect.innerHTML = "";
+
+  for (const profile of TRAILER_PROFILES) {
+    const option = document.createElement("option");
+    option.value = profile.id;
+    option.textContent = profile.name;
+    trailerSelect.appendChild(option);
+  }
+
+  trailerSelect.value = selectedTrailerProfileId;
+  updateTrailerSelectionInfo();
+}
+
+function updateTrailerSelectionInfo() {
+  const profile = getSelectedTrailerProfile();
+  const axleDistance = Math.round((profile.length / 2 - profile.frontAxleInset) - profile.rearAxleX);
+  trailerSelectInfo.textContent =
+    profile.description +
+    " Achsabstand: " + axleDistance + " px" +
+    " | Deichsel: " + profile.drawbarLength + " px";
+}
+
+trailerSelect.addEventListener("change", function () {
+  selectedTrailerProfileId = trailerSelect.value;
+  updateTrailerSelectionInfo();
+  loadTrailerTopViewSprite();
+});
+
+initTrailerSelection();
 
 function startLevel(taskId) {
   if (taskId === "gerade") {
@@ -1432,9 +1595,11 @@ straightTargetY = null;
   updateGearButtons();
   updateWheelVisual();
 
-const randomYOffset =
-  (Math.random() < 0.5 ? -1 : 1) *
-  (Math.floor(Math.random() * 2) + 1);
+  const randomYOffset =
+    (Math.random() < 0.5 ? -1 : 1) *
+    (Math.floor(Math.random() * 2) + 1);
+
+  const trailerProfile = getSelectedTrailerProfile();
 
   truck = {
     x: activeTask.startTruckX,
@@ -1450,10 +1615,14 @@ const randomYOffset =
     x: activeTask.startTrailerX,
     y: activeTask.startTrailerY + randomYOffset,
     angle: activeTask.startTrailerAngle,
-    length: GLOBAL.trailerLength,
-    width: GLOBAL.trailerWidth,
+    profileId: trailerProfile.id,
+    profileName: trailerProfile.name,
+    length: trailerProfile.length,
+    width: trailerProfile.width,
+    frontAxleInset: trailerProfile.frontAxleInset,
+    rearAxleX: trailerProfile.rearAxleX,
     drawbarAngle: activeTask.startTrailerAngle,
-    drawbarLength: GLOBAL.drawbarLength,
+    drawbarLength: trailerProfile.drawbarLength,
     frontAxleX: null,
     frontAxleY: null
   };
@@ -1482,7 +1651,7 @@ const randomYOffset =
 }
 function setTrailerStartPositionBehindTruck(randomYOffset) {
   const hitchPoint = getHitchPoint();
-  const frontAxleOffset = trailer.length / 2 - GLOBAL.trailerFrontAxleInset;
+  const frontAxleOffset = getTrailerFrontAxleOffset();
 
   trailer.drawbarAngle = truck.angle;
   trailer.angle = truck.angle;
@@ -1934,7 +2103,7 @@ function updateTruckPhysics() {
 
 function updateTrailerPhysics() {
   const hitchPoint = getHitchPoint();
-  const frontAxleOffset = trailer.length / 2 - GLOBAL.trailerFrontAxleInset;
+  const frontAxleOffset = getTrailerFrontAxleOffset();
 
   const currentFrontX =
     trailer.x + Math.cos(trailer.angle) * frontAxleOffset;
@@ -2349,8 +2518,9 @@ function getCorners(obj) {
 function getDrawbarPolygon() {
   const hitchPoint = getHitchPoint();
 
-  const axleX = trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset);
-  const axleY = trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset);
+  const frontAxleOffset = getTrailerFrontAxleOffset();
+  const axleX = trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * frontAxleOffset;
+  const axleY = trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * frontAxleOffset;
 
   const width = GLOBAL.drawbarCollisionWidth;
 
@@ -2389,10 +2559,10 @@ function getWheelTriggerPoints() {
   points.push(localToWorld(truck, 130, -truck.width / 3 - 2));
   points.push(localToWorld(truck, 130,  truck.width / 3 + 2));
 
-  points.push(localToWorld(trailer, GLOBAL.trailerRearAxleX, -trailer.width / 3 - 10));
-  points.push(localToWorld(trailer, GLOBAL.trailerRearAxleX,  trailer.width / 3 + 10));
+  points.push(localToWorld(trailer, trailer.rearAxleX, -trailer.width / 3 - 10));
+  points.push(localToWorld(trailer, trailer.rearAxleX,  trailer.width / 3 + 10));
 
-  const frontAxleX = trailer.length / 2 - GLOBAL.trailerFrontAxleInset;
+  const frontAxleX = getTrailerFrontAxleOffset();
   const axleCenter = localToWorld(trailer, frontAxleX, 0);
 
   points.push({
@@ -2774,14 +2944,14 @@ function drawTrailer() {
   ctx.strokeStyle = "black";
   ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(GLOBAL.trailerRearAxleX, -wheelY);
-  ctx.lineTo(GLOBAL.trailerRearAxleX,  wheelY);
+  ctx.moveTo(trailer.rearAxleX, -wheelY);
+  ctx.lineTo(trailer.rearAxleX,  wheelY);
   ctx.stroke();
 
-  drawWheel(GLOBAL.trailerRearAxleX, -wheelY, 0);
-  drawWheel(GLOBAL.trailerRearAxleX,  wheelY, 0);
+  drawWheel(trailer.rearAxleX, -wheelY, 0);
+  drawWheel(trailer.rearAxleX,  wheelY, 0);
 
-  const frontAxleX = trailer.length / 2 - GLOBAL.trailerFrontAxleInset;
+  const frontAxleX = getTrailerFrontAxleOffset();
   const axleAngle = trailer.drawbarAngle - trailer.angle;
 
   ctx.save();
@@ -2806,8 +2976,9 @@ function drawTrailer() {
 function drawDrawbar() {
   const hitchPoint = getHitchPoint();
 
-  const axleX = trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset);
-  const axleY = trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset);
+  const frontAxleOffset = getTrailerFrontAxleOffset();
+  const axleX = trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * frontAxleOffset;
+  const axleY = trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * frontAxleOffset;
 
   const pivotRadius = 19;
 
@@ -3597,8 +3768,8 @@ function drawOrthoTruckWheels(view) {
 }
 
 function drawOrthoTrailerUnderbody(view) {
-  const rearAxleX = GLOBAL.trailerRearAxleX;
-  const frontAxleX = trailer.length / 2 - GLOBAL.trailerFrontAxleInset;
+  const rearAxleX = trailer.rearAxleX;
+  const frontAxleX = getTrailerFrontAxleOffset();
   const frameLeftY = -trailer.width / 2 + 12;
   const frameRightY = trailer.width / 2 - 12;
   const wheelLeftY = -trailer.width / 2 + 14;
@@ -3980,9 +4151,10 @@ function drawOrthoTrailerWheels(view) {
 
 function drawOrthoDrawbar(view) {
   const hitch = getHitchPoint();
+  const frontAxleOffset = getTrailerFrontAxleOffset();
   const axle = {
-    x: trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset),
-    y: trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * (trailer.length / 2 - GLOBAL.trailerFrontAxleInset)
+    x: trailer.frontAxleX ?? trailer.x + Math.cos(trailer.angle) * frontAxleOffset,
+    y: trailer.frontAxleY ?? trailer.y + Math.sin(trailer.angle) * frontAxleOffset
   };
 
   const hitchPoint = view.projectWorld(hitch, 20);
@@ -4765,5 +4937,15 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a12534357f1df192',t:'MTc4MjU3MTE5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a125d1a43931159b',t:'MTc4MjU3NzY0NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1266b396e6362c8',t:'MTc4MjU4MzkzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1269d9beabfb8a5',t:'MTc4MjU4NTk5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("service-worker.js").catch(function (error) {
+      console.warn("Service Worker Registrierung fehlgeschlagen:", error);
+    });
+  });
+}
+</script>
+</body>
 </html>
