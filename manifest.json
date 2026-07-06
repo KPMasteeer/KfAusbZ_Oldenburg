@@ -1,5 +1,5 @@
 {
-  "name": "Grundfahraufgaben CE",
+  "name": "CE Simulator",
   "short_name": "CE Simulator",
   "description": "Simulator für Grundfahraufgaben der Fahrerlaubnisklasse CE.",
   "start_url": "./",
